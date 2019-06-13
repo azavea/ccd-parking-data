@@ -9,5 +9,5 @@ make sure `ParkingZones.gdb` is in `data/raw`
 run:
 ```
 export GEODATABASE=data/raw/ParkingZones.gdb
-python ccd/clean.py $GEODATABASE
+python -m ccd.clean $GEODATABASE
 ```
