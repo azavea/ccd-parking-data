@@ -31,18 +31,32 @@ class ParkingTime(object):
                 'minute': self.minute
             }
 
+class AllTime(ParkingTime):
+    def __init__(self):
+        super().__init__(None, None, None)
 
-class RuleParkingTime(ParkingTime):
-    def __init__(self, day, time):
+def rule_parking_time(day, time):
+    if time == 9911:
+        return AllTime()
+    else:
         dow = validate_dow(day)
         h, m = time_to_hm(time)
-        super().__init__(dow, h, m)
-
+        return ParkingTime(dow, h, m)
 
 class ParkingTimeRange(object):
-    def __init__(self, start: ParkingTime, end: ParkingTime):
+    def __init__(self, start: ParkingTime, end: ParkingTime, days: list):
         self.invalid = False
-        if start.invalid or end.invalid:
+        self.all_time = False
+
+        if start.day and not end.day:
+            end.day = start.day
+
+        if isinstance(start, AllTime) or isinstance(end, AllTime):
+            self.all_time = True
+            self.start = None
+            self.end = None
+
+        elif start.invalid or end.invalid:
             self.invalid = True
             self.start = None
             self.end = None
@@ -58,25 +72,32 @@ class ParkingTimeRange(object):
         """
         if self.invalid or ref_tr.invalid:
             return None
-        else:
-            starts_after_start = self.start >= ref_tr.start
-            ends_before_end = self.end <= ref_tr.end
-            ends_before_start = self.end <= ref_tr.start
-            starts_after_end = self.start >= ref_tr.end
+        if self.all_time and ref_tr.all_time:
+            return 'within'
+        if self.all_time:
+            return 'encompass'
+        if ref_tr.all_time:
+            return 'within'
 
-            if starts_after_start and ends_before_end:
-                return 'within'
+        starts_after_start = self.start >= ref_tr.start
+        ends_before_end = self.end <= ref_tr.end
+        ends_before_start = self.end <= ref_tr.start
+        starts_after_end = self.start >= ref_tr.end
 
-            if ends_before_start or starts_after_end:
-                return 'outside'
+        if starts_after_start and ends_before_end:
+            return 'within'
 
-            if not starts_after_start and not ends_before_end:
-                return 'encompass'
+        if ends_before_start or starts_after_end:
+            return 'outside'
 
-            if not starts_after_start and ends_before_end:
-                return 'overlap_left'
+        if not starts_after_start and not ends_before_end:
+            return 'encompass'
 
-            if starts_after_start and not ends_before_end:
-                return 'overlap_right'
+        if not starts_after_start and ends_before_end:
+            return 'overlap_left'
 
-            raise Exception('None of the time relationships met.')
+        if starts_after_start and not ends_before_end:
+            return 'overlap_right'
+
+        raise Exception('None of the time relationships met.')
+

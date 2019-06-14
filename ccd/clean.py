@@ -18,7 +18,7 @@ def clean(geodatabase):
     
     all_dfs = []
     all_ids = pz['GlobalID'].values
-    # all_ids = all_ids[0:50]
+    all_ids = all_ids[0:50]
     for id in tqdm(all_ids):
         all_dfs += pze.generate_base_shape_json(id)
     

@@ -1,4 +1,4 @@
-from ccd.parking_time import ParkingTimeRange, RuleParkingTime
+from ccd.parking_time import ParkingTimeRange, rule_parking_time
 from ccd.utils import time_to_hm, validate_dow
 
 
@@ -21,7 +21,7 @@ class Rule(object):
         def _a(row, ft, i):
             d_key = 'Day_{}_{}'.format(ft, i)
             t_key = 'Time_{}_{}'.format(ft, 1)
-            return RuleParkingTime(row[d_key], row[t_key])
+            return rule_parking_time(row[d_key], row[t_key])
 
         rpts = {}
         for ft in ('From', 'To'):

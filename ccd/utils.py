@@ -16,14 +16,20 @@ def get_permit_zone(chars):
     # TODO: confirm this
     pz1 = chars['PermitZone1']
     pz2 = chars['PermitZone2']
-    pe = chars['PermitException']
+    # pe = chars['PermitException']
 
-    def _a(b):
-        if np.isnan(b):
-            return 'none'
-        return str(b)
+    if not np.isnan(pz1):
+        return pz1
+    if not np.isnan(pz2):
+        return pz2
+    return ''
 
-    return '{}|{}|{}'.format(_a(pz1), _a(pz2), pe.lower())
+    # def _a(b):
+    #     if np.isnan(b):
+    #         return ''
+    #     return str(b)
+
+    # return '{}|{}|{}'.format(_a(pz1), _a(pz2), pe.lower())
 
 
 def metering_to_paid(m):
@@ -52,7 +58,8 @@ def read_layers_from_gdb(gdb_uri):
 
 
 def time_to_hm(time):
-    time = round(time, -1)
+    if time == 9911:
+        return 'all'
 
     if time > 2400 or time < 0:
         return None, None

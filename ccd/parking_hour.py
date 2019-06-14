@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from ccd.constants import dtd, regulations
+from ccd.constants import dtd, regulations, non_regs
 from ccd.parking_time import ParkingTime, ParkingTimeRange
 from ccd.rule import Rule
 from ccd.utils import (get_permit_zone, metering_to_paid, time_to_hm,
@@ -22,23 +22,27 @@ class ParkingHour(object):
         self.time_limit = None
         self.paid = metering_to_paid(chars['Metering'])
         self.tow_zone = chars['TowZone']
-        self.placard = None
+        self.contractor_placard = ''
         self.permit_zone = get_permit_zone(chars)
         self.get_parking_time_range()
 
     def add_regulation(self, reg):
         reg_type = regulations[reg.regulation]['type']
-        if reg_type == 'reg_is':
-            if self.reg_is != '':
-                self.reg_is += '|'
-            self.reg_is += reg.regulation
-        elif reg_type == 'reg_is_not':
-            if self.reg_is_not != '':
-                self.reg_is_not += '|'
-            self.reg_is_not += reg.regulation
-        else:
-            raise Exception(
-                'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
+        if reg.regulation not in non_regs:
+            if reg_type == 'reg_is':
+                if self.reg_is != '':
+                    self.reg_is += '|'
+                self.reg_is += reg.regulation
+            elif reg_type == 'reg_is_not':
+                if self.reg_is_not != '':
+                    self.reg_is_not += '|'
+                self.reg_is_not += reg.regulation
+            else:
+                raise Exception(
+                    'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
+            
+        if reg.regulation == 'Contractor Placard Not Valid':
+            self.contractor_placard = 'Not Valid'
 
     def check_regulations(self, rules):
         """
@@ -52,7 +56,9 @@ class ParkingHour(object):
             ovlp1 = self.ptr.check_overlap(reg.ptr_1)
             ovlp2 = self.ptr.check_overlap(reg.ptr_2)
 
-            if 'within' in [ovlp1, ovlp2]:
+            ovlp_vals = set(['within', 'overlap_right', 'overlap_left'])
+            chk_ovlp = set([ovlp1, ovlp2])
+            if len(ovlp_vals.intersection(chk_ovlp)) > 0:
                 self.add_regulation(reg)
 
     def get_parking_time_range(self):
@@ -69,7 +75,7 @@ class ParkingHour(object):
                 end_day = dows[dow_index + 1]
         end = ParkingTime(end_day, end_hour)
 
-        self.ptr = ParkingTimeRange(start, end)
+        self.ptr = ParkingTimeRange(start, end, [self.day])
 
     @property
     def df(self):
@@ -85,7 +91,7 @@ class ParkingHour(object):
             'time_limit': self.time_limit,
             'paid': self.paid,
             'tow_zone': self.tow_zone,
-            'placard': self.placard,
+            'contractor_placard': self.contractor_placard,
             'permit_zone': self.permit_zone
         }
 

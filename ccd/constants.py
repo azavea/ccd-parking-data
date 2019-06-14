@@ -8,6 +8,8 @@ dtd = {
     'su': 16
 }
 
+non_regs = ['Contractor Placard Not Valid']
+
 regulations = {
     'No Stopping': {'type': 'reg_is_not'},
     'No Parking (Driveway)': {'type': 'reg_is_not'},
