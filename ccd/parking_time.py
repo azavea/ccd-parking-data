@@ -6,17 +6,12 @@ from ccd.utils import (get_permit_zone, metering_to_paid, time_to_hm,
 
 
 class ParkingTime(object):
-    def __init__(self, dow, hour, minute=0):
-        self.dow = dow
-        if dow:
-            self.day = dtd[dow.lower()]
-        else:
-            self.day = None
+    def __init__(self, hour, minute=0):
         self.hour = hour
         self.minute = minute
 
         self.invalid = False
-        if None in [self.day, self.hour, self.minute]:
+        if None in [self.hour, self.minute]:
             self.invalid = True
 
     def to_dt_dict(self):
@@ -33,18 +28,13 @@ class ParkingTime(object):
 
 class AllTime(ParkingTime):
     def __init__(self):
-        super().__init__(None, None, None)
+        super().__init__(None)
 
-def rule_parking_time(day, time):
-    if time == 9911:
-        return AllTime()
-    else:
-        dow = validate_dow(day)
-        h, m = time_to_hm(time)
-        return ParkingTime(dow, h, m)
+
 
 class ParkingTimeRange(object):
     def __init__(self, start: ParkingTime, end: ParkingTime, days: list):
+        self.start
         self.invalid = False
         self.all_time = False
 
@@ -59,7 +49,8 @@ class ParkingTimeRange(object):
         elif start.invalid or end.invalid:
             self.invalid = True
             self.start = None
-            self.end = None
+            self.end = 
+            
         else:
             if start.day > end.day:
                 end.day += 7

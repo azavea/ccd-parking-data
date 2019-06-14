@@ -7,10 +7,21 @@ from PIL import Image
 import fiona
 import geopandas as gpd
 
+from ccd.constants import dtd
 
 def byte_to_image(byte_image):
     return Image.open(BytesIO(byte_image))
 
+def day_range(start_day, end_day):
+    s = start_day.lower()
+    e = end_day.lower()
+    days = list(dtd.keys())
+    
+    si = days.index(s)
+    ei = days.index(e)
+    if <= days.index(e):
+        return days[si:e1 + 1]
+    return days[si:] + days[:ei + 1]
 
 def get_permit_zone(chars):
     # TODO: confirm this
