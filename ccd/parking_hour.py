@@ -2,43 +2,62 @@ from datetime import datetime
 
 import pandas as pd
 
-from ccd.constants import dtd, regulations
-from ccd.parking_time import ParkingTime, ParkingTimeRange
+from ccd.constants import dtd, non_regs, regulations, time_limit_notes
+from ccd.parking_time import ParkingTime
+from ccd.parking_time_range import HourParkingTimeRange
 from ccd.rule import Rule
 from ccd.utils import (get_permit_zone, metering_to_paid, time_to_hm,
                        validate_dow)
 
 
 class ParkingHour(object):
-    def __init__(self, chars, day, hour):
-        self.id = chars['GlobalID']
-        self.length = chars['Length']
-        self.block = chars['Block']
-        self.street = chars['Street']
-        self.day = day
+    def __init__(self, dow, hour, chars):
+        self.start = ParkingTime(hour)
+        self.end = ParkingTime(hour + 1)
+        self.dow = dow
         self.hour = hour
-        self.reg_is = ''
-        self.reg_is_not = ''
-        self.time_limit = None
-        self.paid = metering_to_paid(chars['Metering'])
-        self.tow_zone = chars['TowZone']
-        self.placard = None
-        self.permit_zone = get_permit_zone(chars)
-        self.get_parking_time_range()
+        self.data = {
+            'id': chars['GlobalID'],
+            'length': chars['Length'],
+            'block': chars['Block'],
+            'street': chars['Street'],
+            'day': self.dow,
+            'hour': self.hour,
+            'reg_is': '',
+            'reg_is_not': '',
+            'time_limit': None,
+            'paid': metering_to_paid(chars['Metering']),
+            'tow_zone': chars['TowZone'],
+            'contractor_placard': '',
+            'permit_zone': get_permit_zone(chars)
+        }
+
+        self.ptr = HourParkingTimeRange(self.start, self.end, self.dow)
+
+    @property
+    def df(self):
+        return pd.DataFrame([self.data])
 
     def add_regulation(self, reg):
         reg_type = regulations[reg.regulation]['type']
-        if reg_type == 'reg_is':
-            if self.reg_is != '':
-                self.reg_is += '|'
-            self.reg_is += reg.regulation
-        elif reg_type == 'reg_is_not':
-            if self.reg_is_not != '':
-                self.reg_is_not += '|'
-            self.reg_is_not += reg.regulation
-        else:
-            raise Exception(
-                'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
+        if reg.regulation not in non_regs:
+            if reg_type == 'reg_is':
+                if self.data['reg_is'] != '':
+                    self.data['reg_is'] += '|'
+                self.data['reg_is'] += reg.regulation
+            elif reg_type == 'reg_is_not':
+                if self.data['reg_is_not'] != '':
+                    self.data['reg_is_not'] += '|'
+                self.data['reg_is_not'] += reg.regulation
+            else:
+                raise Exception(
+                    'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
+
+        if reg.regulation == 'Contractor Placard Not Valid':
+            self.data['contractor_placard'] = 'Not Valid'
+
+        if reg.notes in time_limit_notes.keys():
+            self.data['time_limit'] = time_limit_notes[reg.notes]
 
     def check_regulations(self, rules):
         """
@@ -49,44 +68,14 @@ class ParkingHour(object):
         for _, row in rules.iterrows():
             row = row.to_dict()
             reg = Rule(row)
-            ovlp1 = self.ptr.check_overlap(reg.ptr_1)
-            ovlp2 = self.ptr.check_overlap(reg.ptr_2)
+            ovlp_vals = set(['within', 'overlap_right', 'overlap_left'])
 
-            if 'within' in [ovlp1, ovlp2]:
-                self.add_regulation(reg)
+            for r in reg.ptr_primary:
+                ovlp1 = self.ptr.check_overlap(r)
+                if ovlp1 in ovlp_vals:
+                    self.add_regulation(reg)
 
-    def get_parking_time_range(self):
-        start = ParkingTime(self.day, self.hour)
-        end_day = self.day
-        end_hour = self.hour + 1
-        dows = list(dtd.keys())
-        if end_hour == 24:
-            end_hour = 0
-            dow_index = dows.index(end_day.lower())
-            if dow_index == len(dows) - 1:
-                end_day = dows[0]
-            else:
-                end_day = dows[dow_index + 1]
-        end = ParkingTime(end_day, end_hour)
-
-        self.ptr = ParkingTimeRange(start, end)
-
-    @property
-    def df(self):
-        d = {
-            'id': self.id,
-            'length': self.length,
-            'block': self.block,
-            'street': self.street,
-            'day': self.day,
-            'hour': self.hour,
-            'reg_is': self.reg_is,
-            'reg_is_not': self.reg_is_not,
-            'time_limit': self.time_limit,
-            'paid': self.paid,
-            'tow_zone': self.tow_zone,
-            'placard': self.placard,
-            'permit_zone': self.permit_zone
-        }
-
-        return pd.DataFrame([d])
+            for r in reg.ptr_secondary:
+                ovlp2 = self.ptr.check_overlap(r, secondary=True)
+                if ovlp2 in ovlp_vals:
+                    self.add_regulation(reg)

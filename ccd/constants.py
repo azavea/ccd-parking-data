@@ -8,6 +8,8 @@ dtd = {
     'su': 16
 }
 
+non_regs = ['Contractor Placard Not Valid']
+
 regulations = {
     'No Stopping': {'type': 'reg_is_not'},
     'No Parking (Driveway)': {'type': 'reg_is_not'},
@@ -62,4 +64,10 @@ regulations = {
     'Other (See Notes)': {'type': 'reg_is'},
     'No Regulations Listed': {'type': 'reg_is_not'},
     'Snow Emergency Zone': {'type': 'reg_is_not'}
+}
+
+time_limit_notes = {
+    '1 hr limit': 60,
+    '2 hr parking': 120,
+    '5 Min. Limit': 5
 }
