@@ -11,3 +11,8 @@ run:
 export GEODATABASE=data/raw/ParkingZones.gdb
 python -m ccd.clean $GEODATABASE
 ```
+
+for a test examples (processing only the first 50 segments), add the `--test` flag:
+```
+python -m ccd.clean $GEODATABASE
+```

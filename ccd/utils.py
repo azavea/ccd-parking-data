@@ -6,41 +6,53 @@ from PIL import Image
 
 import fiona
 import geopandas as gpd
-
 from ccd.constants import dtd
+
 
 def byte_to_image(byte_image):
     return Image.open(BytesIO(byte_image))
 
+
 def day_range(start_day, end_day):
-    s = start_day.lower()
-    e = end_day.lower()
     days = list(dtd.keys())
-    
-    si = days.index(s)
-    ei = days.index(e)
-    if <= days.index(e):
-        return days[si:e1 + 1]
+    s = start_day.lower()[0:2]
+    if start_day in ['1', '2', '3', '4', '5', '6', '7']:
+        si = int(start_day) - 1
+    elif s in days:
+        si = days.index(s)
+    else:
+        si = None
+
+    e = end_day.lower()[0:2]
+    if end_day in ['1', '2', '3', '4', '5', '6', '7']:
+        ei = int(end_day) - 1
+    elif e in days:
+        ei = days.index(e)
+    else:
+        ei = None
+
+    if si is None and ei is None:
+        return None
+    if ei is None:
+        ei = si
+    if si is None:
+        si = ei
+
+    if si <= ei:
+        return days[si:ei + 1]
     return days[si:] + days[:ei + 1]
+
 
 def get_permit_zone(chars):
     # TODO: confirm this
     pz1 = chars['PermitZone1']
     pz2 = chars['PermitZone2']
-    # pe = chars['PermitException']
 
     if not np.isnan(pz1):
         return pz1
     if not np.isnan(pz2):
         return pz2
     return ''
-
-    # def _a(b):
-    #     if np.isnan(b):
-    #         return ''
-    #     return str(b)
-
-    # return '{}|{}|{}'.format(_a(pz1), _a(pz2), pe.lower())
 
 
 def metering_to_paid(m):
@@ -66,6 +78,58 @@ def read_layers_from_gdb(gdb_uri):
         layers[l] = df
 
     return layers
+
+
+def series_profile(series):
+    name = series.name
+    is_null = series.isnull().value_counts().to_dict()
+    print(name)
+    if True not in is_null.keys():
+        print('No null values')
+    elif False not in is_null.keys():
+        print('All values are null')
+        return
+    else:
+        print(
+            '{} null values and {} non-null values'.format(is_null[True], is_null[False]))
+
+    vc = series.value_counts().to_dict()
+    print('{} unique values'.format(len(vc)))
+    print('value counts: ')
+    print(vc)
+
+
+def shift_days(days):
+    dows = list(dtd.keys())
+
+    if days is None:
+        return days
+
+    if len(days) == len(dows):
+        return days
+    si = dows.index(days[0].lower()) + 1
+    ei = dows.index(days[-1].lower()) + 1
+
+    if si == 7:
+        si = 0
+    if ei == 7:
+        ei = 0
+
+    if ei < si:
+        return dows[si:] + dows[0:ei + 1]
+    return dows[si:ei + 1]
+
+
+def show_image(image_df, id):
+    b = image_df[image_df['REL_GLOBALID'] == id]['DATA']
+    l = [byte_to_image(bb) for bb in b]
+    if len(l) == 0:
+        print('No images associated with this id')
+        return None
+    if len(l) == 1:
+        return l[0].rotate(270)
+    print('Multiple ({}) images'.format(len(l)))
+    return l
 
 
 def time_to_hm(time):

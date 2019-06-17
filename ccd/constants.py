@@ -65,3 +65,9 @@ regulations = {
     'No Regulations Listed': {'type': 'reg_is_not'},
     'Snow Emergency Zone': {'type': 'reg_is_not'}
 }
+
+time_limit_notes = {
+    '1 hr limit': 60,
+    '2 hr parking': 120,
+    '5 Min. Limit': 5
+}

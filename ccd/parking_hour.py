@@ -2,8 +2,9 @@ from datetime import datetime
 
 import pandas as pd
 
-from ccd.constants import dtd, regulations, non_regs
-from ccd.parking_time import ParkingTime, ParkingTimeRange
+from ccd.constants import dtd, non_regs, regulations, time_limit_notes
+from ccd.parking_time import ParkingTime
+from ccd.parking_time_range import HourParkingTimeRange
 from ccd.rule import Rule
 from ccd.utils import (get_permit_zone, metering_to_paid, time_to_hm,
                        validate_dow)
@@ -30,7 +31,9 @@ class ParkingHour(object):
             'contractor_placard': '',
             'permit_zone': get_permit_zone(chars)
         }
-    
+
+        self.ptr = HourParkingTimeRange(self.start, self.end, self.dow)
+
     @property
     def df(self):
         return pd.DataFrame([self.data])
@@ -39,19 +42,22 @@ class ParkingHour(object):
         reg_type = regulations[reg.regulation]['type']
         if reg.regulation not in non_regs:
             if reg_type == 'reg_is':
-                if self.data.reg_is != '':
-                    self.data.reg_is += '|'
-                self.data.reg_is += reg.regulation
+                if self.data['reg_is'] != '':
+                    self.data['reg_is'] += '|'
+                self.data['reg_is'] += reg.regulation
             elif reg_type == 'reg_is_not':
-                if self.data.reg_is_not != '':
-                    self.data.reg_is_not += '|'
-                self.data.reg_is_not += reg.regulation
+                if self.data['reg_is_not'] != '':
+                    self.data['reg_is_not'] += '|'
+                self.data['reg_is_not'] += reg.regulation
             else:
                 raise Exception(
                     'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
-            
+
         if reg.regulation == 'Contractor Placard Not Valid':
-            self.contractor_placard = 'Not Valid'
+            self.data['contractor_placard'] = 'Not Valid'
+
+        if reg.notes in time_limit_notes.keys():
+            self.data['time_limit'] = time_limit_notes[reg.notes]
 
     def check_regulations(self, rules):
         """
@@ -62,30 +68,14 @@ class ParkingHour(object):
         for _, row in rules.iterrows():
             row = row.to_dict()
             reg = Rule(row)
-            # ovlp1 = self.ptr.check_overlap(reg.ptr_1)
-            # ovlp2 = self.ptr.check_overlap(reg.ptr_2)
+            ovlp_vals = set(['within', 'overlap_right', 'overlap_left'])
 
-            # ovlp_vals = set(['within', 'overlap_right', 'overlap_left'])
-            # chk_ovlp = set([ovlp1, ovlp2])
-            # if len(ovlp_vals.intersection(chk_ovlp)) > 0:
-            #     self.add_regulation(reg)
+            for r in reg.ptr_primary:
+                ovlp1 = self.ptr.check_overlap(r)
+                if ovlp1 in ovlp_vals:
+                    self.add_regulation(reg)
 
-    # @staticmethod
-    # def get_parking_hour_times(hour):
-    #     start = ParkingTime(hour)
-    #     end_hour = hour + 1
-    #     dows = list(dtd.keys())
-    #     if end_hour == 24:
-    #         end_hour = 0
-    #         dow_index = dows.index(end_day.lower())
-    #         if dow_index == len(dows) - 1:
-    #             end_day = dows[0]
-    #         else:
-    #             end_day = dows[dow_index + 1]
-    #     end = ParkingTime(end_day, end_hour)
-
-    #     return start, end
-
-        # self.ptr = ParkingTimeRange(start, end, [self.day])
-
-
+            for r in reg.ptr_secondary:
+                ovlp2 = self.ptr.check_overlap(r, secondary=True)
+                if ovlp2 in ovlp_vals:
+                    self.add_regulation(reg)
