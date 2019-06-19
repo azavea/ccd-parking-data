@@ -16,3 +16,10 @@ for a test examples (processing only the first 50 segments), add the `--test` fl
 ```
 python -m ccd.clean $GEODATABASE --test
 ```
+
+## Unit tests
+To run all unit tests, run:
+
+```
+python -m unittest discover -s ccd/tests/ -p "test_*.py"
+```

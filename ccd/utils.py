@@ -58,14 +58,18 @@ def get_permit_zone(chars):
 def metering_to_paid(m):
     if not m:
         return None
+    m = m.lower()
 
     mtp = {
-        'No Meters': 'No',
-        'Kiosk': 'Yes',
-        'Meters': 'Yes'
+        'no meters': 'No',
+        'kiosk': 'Yes',
+        'meters': 'Yes'
     }
 
-    return mtp[m]
+    if m in mtp.keys():
+        return mtp[m]
+
+    return None
 
 
 def read_layers_from_gdb(gdb_uri):
@@ -104,6 +108,10 @@ def shift_days(days):
 
     if days is None:
         return days
+
+    for d in days:
+        if d not in dows:
+            raise Exception('{} not a valid day of the week'.format(d))
 
     if len(days) == len(dows):
         return days
@@ -148,11 +156,8 @@ def time_to_hm(time):
 
 
 def validate_dow(dow):
-    if dow in ['888', '999', 'N/A']:
-        return None
-
-    if dow.endswith('day'):
-        return dow[0:2]
+    dow = str(dow)
+    dow = dow[0:2].capitalize()
 
     dow_map = {
         '1': 'Mo',
@@ -164,7 +169,9 @@ def validate_dow(dow):
         '7': 'Su',
     }
 
-    try:
-        return dow_map[dow]
-    except KeyError:
-        print('Unknown day value "{}".'.format(dow))
+    if dow in dow_map.keys():
+        dow = dow_map[dow]
+    
+    if dow in dow_map.values():
+        return dow
+    return None
