@@ -13,6 +13,23 @@ class ParkingTime(object):
         if None in [self.hour, self.minute]:
             self.invalid = True
 
+        if self.invalid:
+            self.hour = None
+            self.minute = None
+        else:
+            if self.minute > 60:
+                self.minute = None
+                self.hour = None
+
+            if self.minute == 60:
+                self.minute = 0
+                self.hour += 1
+
+            if self.hour > 24:
+                self.hour = None
+                self.minute = None
+                self.invalid = True
+
     def to_dt_dict(self, next_day=False):
         if self.invalid:
             return None
