@@ -6,7 +6,7 @@ from PIL import Image
 
 import fiona
 import geopandas as gpd
-from ccd.constants import dtd
+from ccd.constants import DTD, PERMIT_ZONE_DEFAULT
 
 
 def byte_to_image(byte_image):
@@ -14,7 +14,7 @@ def byte_to_image(byte_image):
 
 
 def day_range(start_day, end_day):
-    days = list(dtd.keys())
+    days = list(DTD.keys())
     s = start_day.lower()[0:2]
     if start_day in ['1', '2', '3', '4', '5', '6', '7']:
         si = int(start_day) - 1
@@ -52,7 +52,7 @@ def get_permit_zone(chars):
         return pz1
     if not np.isnan(pz2):
         return pz2
-    return ''
+    return PERMIT_ZONE_DEFAULT
 
 
 def metering_to_paid(m):
@@ -104,7 +104,7 @@ def series_profile(series):
 
 
 def shift_days(days):
-    dows = list(dtd.keys())
+    dows = list(DTD.keys())
 
     if days is None:
         return days
