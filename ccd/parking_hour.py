@@ -1,8 +1,11 @@
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 
-from ccd.constants import dtd, non_regs, regulations, time_limit_notes
+from ccd.constants import (CONTRACTOR_PLACARD_DEFAULT, REG_IS_DEFAULT,
+                           REG_IS_NOT_DEFAULT, REGULATIONS, TIME_LIMIT_DEFAULT,
+                           NON_REGS)
 from ccd.parking_time import ParkingTime
 from ccd.parking_time_range import HourParkingTimeRange
 from ccd.rule import Rule
@@ -23,12 +26,12 @@ class ParkingHour(object):
             'street': chars['Street'],
             'day': self.dow,
             'hour': self.hour,
-            'reg_is': '',
-            'reg_is_not': '',
-            'time_limit': None,
+            'reg_is': REG_IS_DEFAULT,
+            'reg_is_not': REG_IS_NOT_DEFAULT,
+            'time_limit': TIME_LIMIT_DEFAULT,
             'paid': metering_to_paid(chars['Metering']),
             'tow_zone': chars['TowZone'],
-            'contractor_placard': '',
+            'contractor_placard': CONTRACTOR_PLACARD_DEFAULT,
             'permit_zone': get_permit_zone(chars)
         }
 
@@ -39,25 +42,34 @@ class ParkingHour(object):
         return pd.DataFrame([self.data])
 
     def add_regulation(self, reg):
-        reg_type = regulations[reg.regulation]['type']
-        if reg.regulation not in non_regs:
+        reg_type = REGULATIONS[reg.regulation]['type']
+        if reg.regulation not in NON_REGS:
             if reg_type == 'reg_is':
+                if self.data['reg_is'] == REG_IS_DEFAULT:
+                    self.data['reg_is'] = ''
                 if self.data['reg_is'] != '':
                     self.data['reg_is'] += '|'
                 self.data['reg_is'] += reg.regulation
             elif reg_type == 'reg_is_not':
+                if self.data['reg_is_not'] == REG_IS_NOT_DEFAULT:
+                    self.data['reg_is_not'] = ''
                 if self.data['reg_is_not'] != '':
                     self.data['reg_is_not'] += '|'
                 self.data['reg_is_not'] += reg.regulation
             else:
                 raise Exception(
                     'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
+        
+        if not np.isnan(reg.time_limit):
+            if self.data['time_limit'] == TIME_LIMIT_DEFAULT:
+                self.data['time_limit'] = ''
+            if self.data['time_limit'] != '':
+                self.data['time_limit'] += '|'
+            self.data['time_limit'] += str(reg.time_limit)
 
         if reg.regulation == 'Contractor Placard Not Valid':
             self.data['contractor_placard'] = 'Not Valid'
 
-        if reg.notes in time_limit_notes.keys():
-            self.data['time_limit'] = time_limit_notes[reg.notes]
 
     def check_regulations(self, rules):
         """

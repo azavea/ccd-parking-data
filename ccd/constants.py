@@ -1,4 +1,4 @@
-dtd = {
+DTD = {
     'mo': 10,
     'tu': 11,
     'we': 12,
@@ -8,15 +8,15 @@ dtd = {
     'su': 16
 }
 
-non_regs = ['Contractor Placard Not Valid']
+NON_REGS = ['Contractor Placard Not Valid']
 
-regulations = {
-    'No Stopping': {'type': 'reg_is_not'},
-    'No Parking (Driveway)': {'type': 'reg_is_not'},
-    'No Parking': {'type': 'reg_is_not'},
+REGULATIONS = {
+    'No Stopping': {'type': 'reg_is'},
+    'No Parking (Driveway)': {'type': 'reg_is'},
+    'No Parking': {'type': 'reg_is'},
     'Bicycles Only': {'type': 'reg_is'},
-    'No Stopping (Except Bicycles)': {'type': 'reg_is_not'},
-    'No Standing': {'type': 'reg_is_not'},
+    'No Stopping (Except Bicycles)': {'type': 'reg_is'},
+    'No Standing': {'type': 'reg_is'},
     'Indego Bike Zone': {'type': 'reg_is'},
     'CCD Only Parking': {'type': 'reg_is'},
     'Judges Only': {'type': 'reg_is'},
@@ -62,12 +62,15 @@ regulations = {
     'No Truck Idling': {'type': 'reg_is_not'},
     'Truck Parking Prohibited': {'type': 'reg_is_not'},
     'Other (See Notes)': {'type': 'reg_is'},
-    'No Regulations Listed': {'type': 'reg_is_not'},
+    'No Regulations Listed': {'type': 'reg_is'},
     'Snow Emergency Zone': {'type': 'reg_is_not'}
 }
 
-time_limit_notes = {
-    '1 hr limit': 60,
-    '2 hr parking': 120,
-    '5 Min. Limit': 5
-}
+REG_IS_DEFAULT = 'Unlimited Parking'
+REG_IS_NOT_DEFAULT = 'None'
+CONTRACTOR_PLACARD_DEFAULT = 'Valid'
+
+COLUMNS = ['id', 'length', 'block', 'street', 'day', 'hour', 'reg_is', 'reg_is_not',
+           'time_limit', 'paid', 'tow_zone', 'contractor_placard', 'permit_zone']
+TIME_LIMIT_DEFAULT = 'None'
+PERMIT_ZONE_DEFAULT = 'None'

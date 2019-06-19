@@ -1,5 +1,3 @@
-
-from ccd.constants import dtd
 from ccd.utils import (get_permit_zone, metering_to_paid, time_to_hm,
                        validate_dow)
 

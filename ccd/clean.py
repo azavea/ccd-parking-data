@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from ccd.parking_zone_evaluator import ParkingZoneEvaluator
 from ccd.utils import read_layers_from_gdb
+from ccd.constants import COLUMNS
 
 
 @click.command()
@@ -30,6 +31,7 @@ def clean(geodatabase, test):
         all_dfs += pze.generate_base_shape_json(id)
 
     df = pd.concat(all_dfs)
+    df = df[COLUMNS]
     df.to_csv(os.path.join('data/output/', fname), index=False)
 
 

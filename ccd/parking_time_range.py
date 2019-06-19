@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ccd.constants import dtd
+from ccd.constants import DTD
 from ccd.parking_time import AllTime, ParkingTime
 from ccd.utils import shift_days
 
@@ -41,7 +41,7 @@ class RuleParkingTimeRange(ParkingTimeRange):
         super().__init__(start, end)
         self.days = days
         if not self.days:
-            self.days = list(dtd.keys())
+            self.days = list(DTD.keys())
 
 
 class HourParkingTimeRange(ParkingTimeRange):
