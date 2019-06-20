@@ -8,8 +8,6 @@ DTD = {
     'su': 16
 }
 
-NON_REGS = ['Contractor Placard Not Valid']
-
 REGULATIONS = {
     'No Stopping': {'type': 'reg_is'},
     'No Parking (Driveway)': {'type': 'reg_is'},
@@ -58,19 +56,53 @@ REGULATIONS = {
     'Taxi Parking': {'type': 'reg_is'},
     'Electric Vehicle Only': {'type': 'reg_is'},
     'Time Limited Auto Parking': {'type': 'reg_is'},
-    'Contractor Placard Not Valid': {'type': 'reg_is_not'},
+    'Contractor Placard Not Valid': {'type': 'contractor_placard'},
     'No Truck Idling': {'type': 'reg_is_not'},
     'Truck Parking Prohibited': {'type': 'reg_is_not'},
-    'Other (See Notes)': {'type': 'reg_is'},
+    'Other (See Notes)': {'type': 'reg_is_not'},
     'No Regulations Listed': {'type': 'reg_is'},
-    'Snow Emergency Zone': {'type': 'reg_is_not'}
+    'Snow Emergency Zone': {'type': 'snow_reg'}
 }
 
+REGULATION_HIERARCHY = [
+    'Registered Package Delivery Companies Only ',
+    'Passenger Drop Off / Pick Up',
+    'No Stopping',
+    'Truck Loading Only',
+    'Time Limited Auto Parking',
+    'Valet Parking',
+    'Federal Governemnt Parking Only',
+    'City Council Only',
+    'Passenger Loading Only',
+    'Authoirzed Vehicles Only',
+    'Fire Zone',
+    'Bus Zone',
+    'Consoul Vehicles Only',
+    'CCD Only Parking',
+    'Press Only Parking',
+    'Philadelphia Tours Only',
+    'Ambulance Zone',
+    'Judges Only',
+    'Inspector General Only',
+    'No Parking',
+    'No Parking (Driveway)',
+    'Loading Zone',
+    'Handicaped Parking',
+    'Taxi Parking',
+    'Snow Emergency Zone',
+    'Enterprise Car Share Reserved Parking'
+]
+
+# Default values
 REG_IS_DEFAULT = 'Unlimited Parking'
 REG_IS_NOT_DEFAULT = 'None'
 CONTRACTOR_PLACARD_DEFAULT = 'Valid'
 PAID_DEFAULT = 'No'
-COLUMNS = ['id', 'length', 'block', 'street', 'day', 'hour', 'reg_is', 'reg_is_not',
-           'time_limit', 'paid', 'tow_zone', 'contractor_placard', 'permit_zone', 'check_flag']
 TIME_LIMIT_DEFAULT = 'None'
 PERMIT_ZONE_DEFAULT = 'None'
+CHECK_FLAG_DEFAULT = 'No'
+SNOW_EMERGENCY_DEFAULT = 'No'
+
+COLUMNS = ['id', 'length', 'block', 'street', 'day', 'hour', 'reg_is', 'reg_is_not',
+           'time_limit', 'paid', 'tow_zone', 'contractor_placard', 'permit_zone',
+           'snow_emergency_zone', 'check']

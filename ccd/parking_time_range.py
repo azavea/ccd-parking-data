@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ccd.constants import DTD
-from ccd.parking_time import AllTime, ParkingTime
+from ccd.parking_time import AllTime, ParkingTime, SchoolTime
 from ccd.utils import shift_days
 
 
@@ -13,6 +13,10 @@ class ParkingTimeRange(object):
     def __init__(self, start: ParkingTime, end: ParkingTime):
         self.invalid = False
         self.all_time = False
+
+        if isinstance(start, SchoolTime) or isinstance(end, SchoolTime):
+            start.set_time(7)
+            end.set_time(16)
 
         if isinstance(start, AllTime) or isinstance(end, AllTime):
             self.all_time = True

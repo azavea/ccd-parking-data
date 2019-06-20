@@ -6,8 +6,15 @@ class ParkingTime(object):
     def __init__(self, hour, minute=0):
         self.hour = hour
         self.minute = minute
-
         self.invalid = False
+        self._check_invalid()
+    
+    def set_time(self, hour, minute=0):
+        self.hour = hour
+        self.minute = minute
+        self._check_invalid()
+
+    def _check_invalid(self):
         if None in [self.hour, self.minute]:
             self.invalid = True
 
@@ -49,5 +56,9 @@ class ParkingTime(object):
 
 
 class AllTime(ParkingTime):
+    def __init__(self):
+        super().__init__(None)
+
+class SchoolTime(ParkingTime):
     def __init__(self):
         super().__init__(None)

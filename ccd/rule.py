@@ -1,4 +1,4 @@
-from ccd.parking_time import AllTime, ParkingTime
+from ccd.parking_time import AllTime, ParkingTime, SchoolTime
 from ccd.parking_time_range import RuleParkingTimeRange, get_rpts
 from ccd.utils import day_range, time_to_hm, validate_dow
 
@@ -28,6 +28,8 @@ class Rule(object):
     def rule_parking_time(time):
         if time == 9911:
             return AllTime()
+        if time == 9910:
+            return SchoolTime()
         else:
             h, m = time_to_hm(time)
             return ParkingTime(h, m)
