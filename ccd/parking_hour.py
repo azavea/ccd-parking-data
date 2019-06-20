@@ -5,7 +5,7 @@ import pandas as pd
 
 from ccd.constants import (CONTRACTOR_PLACARD_DEFAULT, REG_IS_DEFAULT,
                            REG_IS_NOT_DEFAULT, REGULATIONS, TIME_LIMIT_DEFAULT,
-                           NON_REGS)
+                           NON_REGS, PAID_DEFAULT)
 from ccd.parking_time import ParkingTime
 from ccd.parking_time_range import HourParkingTimeRange
 from ccd.rule import Rule
@@ -29,12 +29,14 @@ class ParkingHour(object):
             'reg_is': REG_IS_DEFAULT,
             'reg_is_not': REG_IS_NOT_DEFAULT,
             'time_limit': TIME_LIMIT_DEFAULT,
-            'paid': metering_to_paid(chars['Metering']),
+            'paid': PAID_DEFAULT,
             'tow_zone': chars['TowZone'],
             'contractor_placard': CONTRACTOR_PLACARD_DEFAULT,
-            'permit_zone': get_permit_zone(chars)
+            'permit_zone': get_permit_zone(chars),
+            'check_flag': ''
         }
 
+        self.chars = chars
         self.ptr = HourParkingTimeRange(self.start, self.end, self.dow)
 
     @property
@@ -66,6 +68,9 @@ class ParkingHour(object):
             if self.data['time_limit'] != '':
                 self.data['time_limit'] += '|'
             self.data['time_limit'] += str(reg.time_limit)
+        
+        if reg.regulation == 'Time Limited Auto Parking':
+            self.data['paid'] = metering_to_paid(self.chars['Metering'])
 
         if reg.regulation == 'Contractor Placard Not Valid':
             self.data['contractor_placard'] = 'Not Valid'
@@ -80,7 +85,7 @@ class ParkingHour(object):
         for _, row in rules.iterrows():
             row = row.to_dict()
             reg = Rule(row)
-            ovlp_vals = set(['within', 'overlap_right', 'overlap_left'])
+            ovlp_vals = set(['within', 'overlap_right'])
 
             for r in reg.ptr_primary:
                 ovlp1 = self.ptr.check_overlap(r)
@@ -91,3 +96,6 @@ class ParkingHour(object):
                 ovlp2 = self.ptr.check_overlap(r, secondary=True)
                 if ovlp2 in ovlp_vals:
                     self.add_regulation(reg)
+        
+        if '|' in self.data['reg_is']:
+            self.data['check_flag'] = 'check'
