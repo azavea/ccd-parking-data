@@ -69,8 +69,8 @@ REGULATIONS = {
 REG_IS_DEFAULT = 'Unlimited Parking'
 REG_IS_NOT_DEFAULT = 'None'
 CONTRACTOR_PLACARD_DEFAULT = 'Valid'
-
+PAID_DEFAULT = 'No'
 COLUMNS = ['id', 'length', 'block', 'street', 'day', 'hour', 'reg_is', 'reg_is_not',
-           'time_limit', 'paid', 'tow_zone', 'contractor_placard', 'permit_zone']
+           'time_limit', 'paid', 'tow_zone', 'contractor_placard', 'permit_zone', 'check_flag']
 TIME_LIMIT_DEFAULT = 'None'
 PERMIT_ZONE_DEFAULT = 'None'

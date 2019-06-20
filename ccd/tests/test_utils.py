@@ -3,7 +3,6 @@ import unittest
 
 import numpy as np
 
-from ccd.constants import dtd
 from ccd.utils import (day_range, get_permit_zone, metering_to_paid,
                        shift_days, time_to_hm, validate_dow)
 
