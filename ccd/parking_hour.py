@@ -5,7 +5,7 @@ import pandas as pd
 
 from ccd.constants import (CONTRACTOR_PLACARD_DEFAULT, REG_IS_DEFAULT,
                            REG_IS_NOT_DEFAULT, REGULATIONS, TIME_LIMIT_DEFAULT,
-                           NON_REGS, PAID_DEFAULT)
+                           NON_REGS, PAID_DEFAULT, CHECK_FLAG_DEFAULT, REGULATION_HIERARCHY)
 from ccd.parking_time import ParkingTime
 from ccd.parking_time_range import HourParkingTimeRange
 from ccd.rule import Rule
@@ -33,7 +33,7 @@ class ParkingHour(object):
             'tow_zone': chars['TowZone'],
             'contractor_placard': CONTRACTOR_PLACARD_DEFAULT,
             'permit_zone': get_permit_zone(chars),
-            'check_flag': ''
+            'check_flag': CHECK_FLAG_DEFAULT
         }
 
         self.chars = chars
@@ -47,11 +47,23 @@ class ParkingHour(object):
         reg_type = REGULATIONS[reg.regulation]['type']
         if reg.regulation not in NON_REGS:
             if reg_type == 'reg_is':
+                # get the time limit
+                time_limit = reg.time_limit
+                if np.isnan(reg.time_limit):
+                    time_limit = TIME_LIMIT_DEFAULT
+                # if there is no regulation yet, add one
                 if self.data['reg_is'] == REG_IS_DEFAULT:
-                    self.data['reg_is'] = ''
-                if self.data['reg_is'] != '':
-                    self.data['reg_is'] += '|'
-                self.data['reg_is'] += reg.regulation
+                    self.data['reg_is'] = reg.regulation
+                    self.data['time_limit'] = time_limit
+                # otherwise check the hierarchy
+                else:
+                    for r in (self.data['reg_is'], reg.regulation):
+                        if r not in REGULATION_HIERARCHY:
+                            raise Exception('{} is not in regulation hierarchy'.format(r))
+                    if REGULATION_HIERARCHY.index(reg.regulation) < REGULATION_HIERARCHY.index(self.data['reg_is']):
+                        self.data['reg_is'] = reg.regulation
+                        self.data['time_limit'] = time_limit
+                    self.data['check_flag'] = 'check'
             elif reg_type == 'reg_is_not':
                 if self.data['reg_is_not'] == REG_IS_NOT_DEFAULT:
                     self.data['reg_is_not'] = ''
@@ -61,13 +73,6 @@ class ParkingHour(object):
             else:
                 raise Exception(
                     'reg_type must be one of "reg_is" or "reg_is_not", got "{}"'.format(reg_type))
-        
-        if not np.isnan(reg.time_limit):
-            if self.data['time_limit'] == TIME_LIMIT_DEFAULT:
-                self.data['time_limit'] = ''
-            if self.data['time_limit'] != '':
-                self.data['time_limit'] += '|'
-            self.data['time_limit'] += str(reg.time_limit)
         
         if reg.regulation == 'Time Limited Auto Parking':
             self.data['paid'] = metering_to_paid(self.chars['Metering'])
@@ -96,6 +101,3 @@ class ParkingHour(object):
                 ovlp2 = self.ptr.check_overlap(r, secondary=True)
                 if ovlp2 in ovlp_vals:
                     self.add_regulation(reg)
-        
-        if '|' in self.data['reg_is']:
-            self.data['check_flag'] = 'check'

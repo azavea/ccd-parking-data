@@ -15,6 +15,10 @@ def byte_to_image(byte_image):
 
 def day_range(start_day, end_day):
     days = list(DTD.keys())
+
+    if start_day == '888' or end_day == '888':
+        return days[0:5]
+
     s = start_day.lower()[0:2]
     if start_day in ['1', '2', '3', '4', '5', '6', '7']:
         si = int(start_day) - 1
@@ -143,6 +147,9 @@ def show_image(image_df, id):
 def time_to_hm(time):
     if time == 9911:
         return 'all'
+
+    if time == 9910:
+        return 'school'
 
     if time > 2400 or time < 0:
         return None, None

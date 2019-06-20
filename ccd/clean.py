@@ -32,6 +32,7 @@ def clean(geodatabase, test):
 
     df = pd.concat(all_dfs)
     df = df[COLUMNS]
+    print('Writing CSV...')
     df.to_csv(os.path.join('data/output/', fname), index=False)
 
 
