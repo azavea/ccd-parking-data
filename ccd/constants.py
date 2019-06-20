@@ -89,7 +89,6 @@ REGULATION_HIERARCHY = [
     'Loading Zone',
     'Handicaped Parking',
     'Taxi Parking',
-    'Snow Emergency Zone',
     'Enterprise Car Share Reserved Parking'
 ]
 
