@@ -31,6 +31,7 @@ def clean(geodatabase, test):
         all_dfs += pze.generate_base_shape_json(id)
 
     df = pd.concat(all_dfs)
+    del(all_dfs)
     df = df[COLUMNS]
     print('Writing CSV...')
     df.to_csv(os.path.join('data/output/', fname), index=False)
