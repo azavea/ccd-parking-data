@@ -1,0 +1,9 @@
+#!/bin/bash
+
+docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ \
+    --rm shst-image shst match /data/parking_zones.geojson \
+    --search-radius=30 \
+    --snap-side-of-street \
+    --best-direction \
+    --tile-hierarchy=8 \
+    --out=/data/output_30_side-of-street_best_dir_hierarchy-8-TEST.geojson
