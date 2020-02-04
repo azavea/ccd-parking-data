@@ -1,8 +1,8 @@
-from curblr import Regulation, Location
+from curblr import Regulation, Location, CurbLRObject
 
 
-class Segment:
-    def __init__(self, geometry, location=None):
+class Segment(CurbLRObject):
+    def __init__(self, geometry, location: Location=None):
         self.type = 'Feature'
         self.geometry = geometry
         self.location = location

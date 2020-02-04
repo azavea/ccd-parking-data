@@ -4,10 +4,8 @@ SEARCH_RADIUS=30
 
 docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ \
     --rm shst-image shst match /data/parking_zones.geojson \
-    --search-radius=$SEARCH_RADIUS \
-    --snap-intersections \
+    --search-radius=SEARCH_RADIUS \
     --snap-side-of-street \
-    --offset-line=5 \
     --tile-hierarchy=8 \
     --best-direction \
-    --out=/data/output_30_side-of-street_hierarchy-8_offset-5_best-direction_snap-intersections.geojson
+    --out=/data/output_30_side-of-street_hierarchy-8_best-direction.geojson
