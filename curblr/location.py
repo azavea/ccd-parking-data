@@ -45,6 +45,9 @@ class Location(CurbLRObject):
 
     @staticmethod
     def from_lr_feature(feature, derivedFrom=None, objectId=None, marker=None, baysAngle=None, baysCount=None, streetName=None):
+        if not feature:
+            return None
+
         props = feature['properties']
 
         kwargs = {}

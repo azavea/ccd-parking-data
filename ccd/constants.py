@@ -8,6 +8,8 @@ DTD = {
     'su': 16
 }
 
+
+
 REGULATIONS = {
     'No Stopping': {'type': 'reg_is'},
     'No Parking (Driveway)': {'type': 'reg_is'},
