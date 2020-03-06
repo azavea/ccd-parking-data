@@ -9,7 +9,9 @@ from subprocess import call
 
 import click
 import geopandas as gpd
+import numpy as np
 import pandas as pd
+
 from curblr import (CurbLRObject, Feature, FeatureCollection, Location,
                     Manifest, Payment, Regulation, Rule, TimeSpan, UserClass)
 from curblr.authority import Authority
@@ -20,13 +22,16 @@ from curblr.utils import time_str
 
 def combine_linear_ref_radii(linear_ref_dir):
     files = os.listdir(linear_ref_dir)
+
+    max_radius = np.max(
+        [int(f.split('.')[0].replace('NEW_', '').replace('_ends', '')) for f in files])
     if 'compiled.matched.geojson' not in files:
         def filepath(x): return join(linear_ref_dir,
                                      'NEW_{}.matched.geojson'.format(x))
         def filepath_end(x): return join(
             linear_ref_dir, 'NEW_{}_ends.matched.geojson'.format(x))
 
-        for x in range(5, 40, 5):
+        for x in range(5, max_radius + 5, 5):
             with open(filepath(x)) as f:
                 gj = json.load(f)
             for f in gj['features']:
@@ -39,7 +44,8 @@ def combine_linear_ref_radii(linear_ref_dir):
 
         matched = gpd.read_file(filepath_end(5))
         unmatched = gpd.read_file(filepath(5).replace('matched', 'unmatched'))
-        radii = [(x, gpd.read_file(filepath_end(x))) for x in range(10, 40, 5)]
+        radii = [(x, gpd.read_file(filepath_end(x)))
+                 for x in range(10, max_radius, 5)]
         for gid in unmatched['globalid_s']:
             for radius, df in radii:
                 rdf = df[df['pp_globalid_s'] == gid]
@@ -223,7 +229,7 @@ def generate_curblr(segments, regulation_table, reg_lookup, original_geoms=False
         feature = Feature(geom, loc, images=images)
 
         # get all regulations for this segment
-        regs_gdf = regulation_table[regulation_table['globalid_static'] == gid]
+        # regs_gdf = regulation_table[regulation_table['globalid_static'] == gid]
 
         # payment
         m = seg['Metering']
@@ -282,7 +288,8 @@ def to_relational(fc):
 
         loc = feature.location
 
-        curb_id = md5('{} {} {} {}'.format(loc.object_id, loc.shst_ref_id, loc.shst_location_start, loc.shst_location_end).encode()).hexdigest()
+        curb_id = md5('{} {} {} {}'.format(loc.object_id, loc.shst_ref_id,
+                                           loc.shst_location_start, loc.shst_location_end).encode()).hexdigest()
 
         feature_d = {
             'curb_id': curb_id,
@@ -313,7 +320,8 @@ def to_relational(fc):
         lines.append(feature_d)
 
         for reg in feature.regulations:
-            reg_id = md5('{} {}'.format(curb_id, str(reg.to_dict())).encode()).hexdigest()
+            reg_id = md5('{} {}'.format(curb_id, str(
+                reg.to_dict())).encode()).hexdigest()
 
             reg_d = {
                 'curb_id': curb_id,
@@ -347,17 +355,18 @@ def to_relational(fc):
             regulations.append(reg_d)
 
             if not reg.time_spans:
-                ts_id = md5('{} {}'.format(reg_id, 'all time').encode()).hexdigest()
+                ts_id = md5('{} {}'.format(
+                    reg_id, 'all time').encode()).hexdigest()
 
                 ts_d = {
-                        'curb_id': curb_id,
-                        'regulation_id': reg_id,
-                        'timespan_id': ts_id,
-                        'days': ';'.join(DAYS),
-                        'from_str': '0:00',
-                        'to_str': '24:00',
-                        'from_num': 0,
-                        'to_num': 24
+                    'curb_id': curb_id,
+                    'regulation_id': reg_id,
+                    'timespan_id': ts_id,
+                    'days': ';'.join(DAYS),
+                    'from_str': '0:00',
+                    'to_str': '24:00',
+                    'from_num': 0,
+                    'to_num': 24
                 }
 
                 for d in DAYS:
@@ -366,7 +375,8 @@ def to_relational(fc):
                 time_spans.append(ts_d)
             else:
                 for ts in reg.time_spans:
-                    ts_id = md5('{} {}'.format(reg_id, str(ts.to_dict())).encode()).hexdigest()
+                    ts_id = md5('{} {}'.format(reg_id, str(
+                        ts.to_dict())).encode()).hexdigest()
 
                     ts_d = {
                         'curb_id': curb_id,
@@ -392,9 +402,11 @@ def to_relational(fc):
 
                             ts_d_c = copy(ts_d)
 
-                            ts_d_c['timespan_id'] = hash('{} {}'.format(reg_id, str(tod.to_dict())))
+                            ts_d_c['timespan_id'] = hash(
+                                '{} {}'.format(reg_id, str(tod.to_dict())))
                             ts_d_c['from_str'] = tod.to_dict()['from']
-                            ts_d_c['to_str'] = '24:00' if tod.to_dict()['to'] == '23:59' else tod.to_dict()['to']
+                            ts_d_c['to_str'] = '24:00' if tod.to_dict(
+                            )['to'] == '23:59' else tod.to_dict()['to']
 
                             def decimal_time(time):
                                 hour = time.hour
@@ -427,7 +439,7 @@ def main(segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri, output_key
     output_dir = join('data/output/', output_key)
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
-
+    
     segments, hour_table, linear_ref, reg_lookup = read(
         segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri)
 
@@ -441,14 +453,13 @@ def main(segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri, output_key
                          original_geoms=original_geoms)
     fc.save(join(output_dir, '{}.curblr.json'.format(output_key)))
 
-    # fc = FeatureCollection.from_file('/home/simon/files/client/ccd-curbs/ccd/data/output/non_offset_03-02_09-45/non_offset_03-02_09-45.curblr.json')
-
     fc_null_removed = deepcopy(fc)
     fc_null_removed.features = []
     for f in fc.features:
         if f.location.shst_ref_id != 'unmatched':
             fc_null_removed.features.append(f)
-    fc_null_removed.save(join(output_dir, '{}_null-removed.curblr.json'.format(output_key)))
+    fc_null_removed.save(
+        join(output_dir, '{}_null-removed.curblr.json'.format(output_key)))
 
     lines, regs, timespans = to_relational(fc)
     lines.to_file(join(output_dir, '{}_segments'.format(output_key)))
@@ -456,10 +467,11 @@ def main(segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri, output_key
         join(output_dir, '{}_regulations.csv'.format(output_key)), index=False)
     timespans.to_csv(
         join(output_dir, '{}_timespans.csv'.format(output_key)), index=False)
-    
+
     joined = pd.merge(lines, regs, 'right', 'curb_id')
     joined = pd.merge(joined, timespans, 'right', ['curb_id', 'regulation_id'])
-    joined.to_file(join(output_dir, '{}_segments_with_regs'.format(output_key)))
+    joined.to_file(
+        join(output_dir, '{}_segments_with_regs'.format(output_key)))
 
 
 # write fc
