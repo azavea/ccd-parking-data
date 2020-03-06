@@ -3,23 +3,19 @@ import json
 import os
 import sys
 from copy import copy, deepcopy
+from hashlib import md5
 from os.path import join
 from subprocess import call
 
 import click
 import geopandas as gpd
 import pandas as pd
-
-sys.path.append('/home/simon/files/client/ccd-curbs/PyCurb/')
-sys.path.append('/home/simon/files/client/ccd-curbs/ccd/')
-
 from curblr import (CurbLRObject, Feature, FeatureCollection, Location,
                     Manifest, Payment, Regulation, Rule, TimeSpan, UserClass)
 from curblr.authority import Authority
 from curblr.constants import DAYS
 from curblr.time_rule import DaysOfWeek, DesignatedPeriod, TimeOfDay
 from curblr.utils import time_str
-
 
 
 def combine_linear_ref_radii(linear_ref_dir):
@@ -286,14 +282,16 @@ def to_relational(fc):
 
         loc = feature.location
 
-        curb_id = loc.object_id
+        curb_id = md5('{} {} {} {}'.format(loc.object_id, loc.shst_ref_id, loc.shst_location_start, loc.shst_location_end).encode()).hexdigest()
 
         feature_d = {
             'curb_id': curb_id,
             'type': feature.type,
-            'geometry': feature.geometry,
-            'images': ';'.join(feature.images)
+            'geometry': feature.geometry
         }
+
+        if feature.images:
+            feature_d['images'] = ';'.join(feature.images)
 
         shp_field_names = {
             'shst_ref_id': 'shst_ref',
@@ -314,8 +312,8 @@ def to_relational(fc):
 
         lines.append(feature_d)
 
-        for i, reg in enumerate(feature.regulations):
-            reg_id = '{}_{}'.format(curb_id, i)
+        for reg in feature.regulations:
+            reg_id = md5('{} {}'.format(curb_id, str(reg.to_dict())).encode()).hexdigest()
 
             reg_d = {
                 'curb_id': curb_id,
@@ -348,10 +346,27 @@ def to_relational(fc):
 
             regulations.append(reg_d)
 
-            if reg.time_spans:
-                ii = 0
+            if not reg.time_spans:
+                ts_id = md5('{} {}'.format(reg_id, 'all time').encode()).hexdigest()
+
+                ts_d = {
+                        'curb_id': curb_id,
+                        'regulation_id': reg_id,
+                        'timespan_id': ts_id,
+                        'days': ';'.join(DAYS),
+                        'from_str': '0:00',
+                        'to_str': '24:00',
+                        'from_num': 0,
+                        'to_num': 24
+                }
+
+                for d in DAYS:
+                    ts_d[d] = 1
+
+                time_spans.append(ts_d)
+            else:
                 for ts in reg.time_spans:
-                    ts_id = '{}_{}'.format(reg_id, ii)
+                    ts_id = md5('{} {}'.format(reg_id, str(ts.to_dict())).encode()).hexdigest()
 
                     ts_d = {
                         'curb_id': curb_id,
@@ -372,16 +387,14 @@ def to_relational(fc):
                         ts_d['from_num'] = 0
                         ts_d['to_num'] = 24
                         time_spans.append(ts_d)
-                        ii += 1
                     else:
                         for tod in ts.times_of_day:
 
                             ts_d_c = copy(ts_d)
 
-                            ts_d_c['timespan_id'] = '{}_{}'.format(reg_id, ii)
-
+                            ts_d_c['timespan_id'] = hash('{} {}'.format(reg_id, str(tod.to_dict())))
                             ts_d_c['from_str'] = tod.to_dict()['from']
-                            ts_d_c['to_str'] = tod.to_dict()['to']
+                            ts_d_c['to_str'] = '24:00' if tod.to_dict()['to'] == '23:59' else tod.to_dict()['to']
 
                             def decimal_time(time):
                                 hour = time.hour
@@ -390,8 +403,6 @@ def to_relational(fc):
 
                             ts_d_c['from_num'] = decimal_time(tod.time_from)
                             ts_d_c['to_num'] = decimal_time(tod.time_to)
-
-                            ii += 1
 
                             time_spans.append(ts_d_c)
 
@@ -430,6 +441,8 @@ def main(segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri, output_key
                          original_geoms=original_geoms)
     fc.save(join(output_dir, '{}.curblr.json'.format(output_key)))
 
+    # fc = FeatureCollection.from_file('/home/simon/files/client/ccd-curbs/ccd/data/output/non_offset_03-02_09-45/non_offset_03-02_09-45.curblr.json')
+
     fc_null_removed = deepcopy(fc)
     fc_null_removed.features = []
     for f in fc.features:
@@ -444,6 +457,9 @@ def main(segment_uri, hour_table_uri, linear_ref_dir, reg_lookup_uri, output_key
     timespans.to_csv(
         join(output_dir, '{}_timespans.csv'.format(output_key)), index=False)
     
+    joined = pd.merge(lines, regs, 'right', 'curb_id')
+    joined = pd.merge(joined, timespans, 'right', ['curb_id', 'regulation_id'])
+    joined.to_file(join(output_dir, '{}_segments_with_regs'.format(output_key)))
 
 
 # write fc
