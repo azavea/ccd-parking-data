@@ -1,9 +1,0 @@
-#!/bin/bash
-
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=5 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_5.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=10 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_10.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=15 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_15.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=20 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_20.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=25 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_25.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=30 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_30.geojson
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ --rm shst-image shst match /data/curbs_12-19_WGS.geojson --search-radius=35 --snap-side-of-street --tile-hierarchy=8 --best-direction --out=/data/non_offset/NEW_35.geojson
