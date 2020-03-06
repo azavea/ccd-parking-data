@@ -1,12 +1,14 @@
 #!/bin/bash
 
-SEARCH_RADIUS=5
+# update the search radius to desired number
+SEARCH_RADIUS=30
 
-docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ \
+# specify specific parameters defined here: https://github.com/sharedstreets/sharedstreets-js#options-1
+docker run -it -v "$(pwd)/data/interim/":/data/ \
     --rm shst-image shst match /data/curbs_12-19_WGS.geojson \
     --search-radius=$SEARCH_RADIUS \
     --snap-side-of-street \
     --tile-hierarchy=8 \
     --best-direction \
-    --out=/data/non_offset/NEW_40.geojson
+    --out=/data/linear_referencing/lr_radius-30.geojson
 
