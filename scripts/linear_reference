@@ -1,12 +1,12 @@
 #!/bin/bash
 
-SEARCH_RADIUS=30
+SEARCH_RADIUS=5
 
 docker run -it -v "$(pwd)/data/interim/parking_data/":/data/ \
-    --rm shst-image shst match /data/sample_ccd_block_2.geojson \
+    --rm shst-image shst match /data/curbs_12-19_WGS.geojson \
     --search-radius=$SEARCH_RADIUS \
     --snap-side-of-street \
     --tile-hierarchy=8 \
     --best-direction \
-    --offset-line=5 \
-    --out=/data/SAMPLE_output_30_side-of-street_hierarchy-8_best-direction.geojson
+    --out=/data/non_offset/NEW_40.geojson
+
