@@ -1,8 +1,8 @@
 rasterio>=1.0a12
-fiona==1.8.*
+fiona==1.8.6
 shapely==1.7.*
 pandas==0.25.*
-geopandas==0.6.*
+geopandas==0.6.1
 pyproj==2.3.*
 rasterstats==0.13.*
 jupyter==1.0.*
