@@ -1,9 +1,11 @@
-# CCD Street Inventory Data Cleaning
+# CCD Street Inventory Data Cleaning + CurbLR Feed
 
-## Info
+## Phase 1
+
+#### Info
 Additional data exploration info [here](data/README.md).
 
-## Getting started
+#### Getting started
 make sure `ParkingZones.gdb` is in `data/raw`  
 
 run:
@@ -17,9 +19,13 @@ for a test examples (processing only the first 50 segments), add the `--test` fl
 python -m ccd.clean $GEODATABASE --test
 ```
 
-## Unit tests
+#### Unit tests
 To run all unit tests, run:
 
 ```
 python -m unittest discover -s ccd/tests/ -p "test_*.py"
 ```
+
+## Phase 2
+
+Coming soon
