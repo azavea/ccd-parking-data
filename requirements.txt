@@ -13,4 +13,4 @@ statsmodels==0.10.*
 requests==2.22.*
 numpy==1.17.*
 descartes==1.1.*
-Pillow==5.0.0
+Pillow==9.0.1
